@@ -12,13 +12,13 @@ crayon = function(x) cat(green(x), sep = "\n")
 options("tidylog.display" = list(crayon))
 
 
-# Tidy 2nd sheet ("Fonologinen tietoisuus - Alkuäänne") ------------------------
+# Tidy 1st sheet ("Fonologinen tietoisuus - Alkuäänne") ------------------------
 
 ## Load data
 esko_fonol = read_xlsx("C:/Users/03248355/Work Folders/Data/ESKO_5V_koko_data_SV.xlsx", sheet = 3)
 
 
-
+## Create a variable to indicate whether each item was correctly answered
 esko_fonol <- esko_fonol %>%
   group_by(IDHash, IDCode) %>%
   mutate(
@@ -34,6 +34,7 @@ esko_fonol <- esko_fonol %>%
     Q10_AnsC_fon = ifelse(PreOrd == 11 & AnsC == 1, 1, 0)
   )
 
+## Group the data by ID
 esko_fonol <- esko_fonol %>%
   group_by(IDHash, IDCode) %>%
   summarise(Q1_AnsC_fon = sum(Q1_AnsC_fon, na.rm = TRUE),
@@ -47,6 +48,7 @@ esko_fonol <- esko_fonol %>%
             Q9_AnsC_fon = sum(Q9_AnsC_fon, na.rm = TRUE),
             Q10_AnsC_fon = sum(Q10_AnsC_fon, na.rm = TRUE))
 
+## Create a variable for total correctly answered items
 esko_fonol  <- esko_fonol %>%
   mutate(Sum_AnsC_fon = sum(
     Q1_AnsC_fon,
@@ -61,7 +63,7 @@ esko_fonol  <- esko_fonol %>%
     Q10_AnsC_fon))
 
 
-# Tidy 3rd sheet ("Kirjaintuntemus") -------------------------------------------
+# Tidy 2nd sheet ("Kirjaintuntemus") -------------------------------------------
 
 ## Load data
 esko_kirjain = read_xlsx("C:/Users/03248355/Work Folders/Data/ESKO_5V_koko_data_SV.xlsx", sheet = 4)
@@ -72,6 +74,7 @@ esko_kirjain = esko_kirjain %>%
   mutate(Ans = str_replace_all(Ans, "[, ]", ""), # Remove commas and blank spaces from answers
          AnsCount = nchar(Ans) - 2) # Sum of identified letters is the number of characters - brackets
 
+## Create a variable to indicate whether each item was correctly answered
 esko_kirjain <- esko_kirjain %>%
   group_by(IDHash, IDCode) %>%
   mutate(
@@ -79,6 +82,7 @@ esko_kirjain <- esko_kirjain %>%
     Q2_AnsC_kt = ifelse(PreOrd == 2 & AnsCount > 0, AnsCount, 0),
     Q3_AnsC_kt = ifelse(PreOrd == 3 & AnsCount > 0, AnsCount, 0))
 
+## Create a variable for total correctly answered items and group the data by ID
 esko_kirjain <- esko_kirjain %>%
   group_by(IDHash, IDCode) %>%
   summarise(Sum_AnsC_kt = sum(Q1_AnsC_kt,Q2_AnsC_kt,Q3_AnsC_kt),
@@ -87,12 +91,14 @@ esko_kirjain <- esko_kirjain %>%
             Q3_AnsC_kt = max(Q3_AnsC_kt))
 
 
-# Tidy 4th sheet ("Lukutaito - Sanalistan lukeminen") --------------------------
+# Tidy 3rd sheet ("Lukutaito - Sanalistan lukeminen") --------------------------
 
 ## Load data
 esko_lukutaito = read_xlsx("C:/Users/03248355/Work Folders/Data/ESKO_5V_koko_data_SV.xlsx", sheet = 5)
 
-## Process data
+## Create a variable to indicate whether each item was correctly answered but
+## also create a variable to indicate whether each item was attempted to answer.
+## We also create a total correctly answered and total attempted variables
 esko_lukutaito = esko_lukutaito %>%
   filter(IDCode != "admin@esko.fi") %>% # Drop test account
   group_by(IDHash, IDCode) %>%
@@ -161,45 +167,33 @@ esko_lukutaito = esko_lukutaito %>%
       Q9_att_lt,
       Q10_att_lt))
 
-print(mean(esko_lukutaito$Sum_AnsC))
-print(sd(esko_lukutaito$Sum_AnsC))
-
-# Create a vector of variable names
-variable_names <- paste0("Q", 1:11, "_AnsC")
-
-# Loop through each variable and calculate the mean
-for (variable in variable_names) {
-  variable_mean <- mean(esko_lukutaito[[variable]])
-  print(variable_mean)
-}
-
 # Combine verbal assessment into one table -------------------------------------
 
 ## Merge by full join so that assessments with missing values are not lost
 esko_se = right_join(esko_fonol, esko_kirjain, by = c("IDHash", "IDCode"))
 esko_se = right_join(esko_se, esko_lukutaito, by = c("IDHash", "IDCode")) 
 
+## Create a dataframe for the correlation matrix
 esko_sums = esko_se[,c("Sum_AnsC_lt","Sum_AnsC_kt","Sum_AnsC_fon")]
 
+
+# Create descriptive statistics ------------------------------------------------
+
+##
 cor(esko_sums, method = "pearson")
 
 # Calculate quantiles
 quantiles_kt <- quantile(esko_se$Sum_AnsCS_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
-
-# Print the quantiles
-print(quantiles_kt)
-
-# Calculate quantiles
 quantiles_lt <- quantile(esko_se$Sum_AnsC_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
-
-# Print the quantiles
-print(quantiles_lt)
-
-# Calculate quantiles
 quantiles_fon <- quantile(esko_se$Sum_AnsC_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
 
 # Print the quantiles
+print(quantiles_kt)
+print(quantiles_lt)
 print(quantiles_fon)
+
+
+
 
 esko_kt = esko_se[,c("Q1_AnsC_kt","Q2_AnsC_kt","Q3_AnsC_kt")]
 alpha(esko_kt)

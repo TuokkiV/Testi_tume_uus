@@ -38,11 +38,7 @@ esko_se = esko_se %>%
 ## Load data
 esko_fonol = read_xlsx("C:/Users/03248355/Work Folders/Data/eskodata_se.xlsx", 3)
 
-## Process data
-#esko_fonol = esko_fonol %>%
-#  filter(PreOrd != 1, # Drop practice questions
-#         IDCode != "admin@esko.fi") # Drop test account
-
+## Create a variable to indicate whether each item was correctly answered
 esko_fonol <- esko_fonol %>%
   group_by(IDHash, IDCode) %>%
   mutate(
@@ -58,19 +54,21 @@ esko_fonol <- esko_fonol %>%
     Q10_AnsC_fon = ifelse(PreOrd == 10 & AnsC == 1, 1, 0)
   )
 
+## Group the data by ID
 esko_fonol <- esko_fonol %>%
   group_by(IDHash, IDCode) %>%
-  summarise(Q1_AnsC_fon = sum(Q1_AnsC_fon, na.rm = TRUE),
-  Q2_AnsC_fon = sum(Q2_AnsC_fon, na.rm = TRUE),
-  Q3_AnsC_fon = sum(Q3_AnsC_fon, na.rm = TRUE),
-  Q4_AnsC_fon = sum(Q4_AnsC_fon, na.rm = TRUE),
-  Q5_AnsC_fon = sum(Q5_AnsC_fon, na.rm = TRUE),
-  Q6_AnsC_fon = sum(Q6_AnsC_fon, na.rm = TRUE),
-  Q7_AnsC_fon = sum(Q7_AnsC_fon, na.rm = TRUE),
-  Q8_AnsC_fon = sum(Q8_AnsC_fon, na.rm = TRUE),
-  Q9_AnsC_fon = sum(Q9_AnsC_fon, na.rm = TRUE),
-  Q10_AnsC_fon = sum(Q10_AnsC_fon, na.rm = TRUE))
+  summarise(Q1_AnsC_fon = max(Q1_AnsC_fon, na.rm = TRUE),
+  Q2_AnsC_fon = max(Q2_AnsC_fon, na.rm = TRUE),
+  Q3_AnsC_fon = max(Q3_AnsC_fon, na.rm = TRUE),
+  Q4_AnsC_fon = max(Q4_AnsC_fon, na.rm = TRUE),
+  Q5_AnsC_fon = max(Q5_AnsC_fon, na.rm = TRUE),
+  Q6_AnsC_fon = max(Q6_AnsC_fon, na.rm = TRUE),
+  Q7_AnsC_fon = max(Q7_AnsC_fon, na.rm = TRUE),
+  Q8_AnsC_fon = max(Q8_AnsC_fon, na.rm = TRUE),
+  Q9_AnsC_fon = max(Q9_AnsC_fon, na.rm = TRUE),
+  Q10_AnsC_fon = max(Q10_AnsC_fon, na.rm = TRUE))
 
+#Add a variable for the total correct answers by an individual
 esko_fonol  <- esko_fonol %>%
   mutate(Sum_AnsC_fon = sum(
     Q1_AnsC_fon,
@@ -96,6 +94,7 @@ esko_kirjain = esko_kirjain %>%
   mutate(Ans = str_replace_all(Ans, "[, ]", ""), # Remove commas and blank spaces from answers
          AnsCount = nchar(Ans) - 2) # Sum of identified letters is the number of characters - brackets
 
+## Create a variable to indicate whether each item was correctly answered
 esko_kirjain <- esko_kirjain %>%
   group_by(IDHash, IDCode) %>%
   mutate(
@@ -103,6 +102,7 @@ esko_kirjain <- esko_kirjain %>%
     Q2_AnsC_kt = ifelse(PreOrd == 2 & AnsCount > 0, AnsCount, 0),
     Q3_AnsC_kt = ifelse(PreOrd == 3 & AnsCount > 0, AnsCount, 0))
 
+#Group the data by ID and add the total correct answers -variable
 esko_kirjain <- esko_kirjain %>%
   group_by(IDHash, IDCode) %>%
   summarise(Sum_AnsC_kt = sum(Q1_AnsC_kt,Q2_AnsC_kt,Q3_AnsC_kt),
@@ -116,7 +116,9 @@ esko_kirjain <- esko_kirjain %>%
 ## Load data
 esko_lukutaito = read_xlsx("C:/Users/03248355/Work Folders/Data/eskodata_se.xlsx", 5)
 
-## Process data
+## Create individual variables for correctly/ falsely answered items, total correctly 
+## answered items in addition to individual variables for attempted items and
+## total attempted items
 esko_lukutaito = esko_lukutaito %>%
   filter(IDCode != "admin@esko.fi") %>% # Drop test account
   group_by(IDHash, IDCode) %>%
@@ -185,49 +187,80 @@ esko_lukutaito = esko_lukutaito %>%
       Q9_att_lt,
       Q10_att_lt))
 
-print(mean(esko_lukutaito$Sum_AnsC))
-print(sd(esko_lukutaito$Sum_AnsC))
-
-# Create a vector of variable names
-variable_names <- paste0("Q", 1:11, "_AnsC")
-
-# Loop through each variable and calculate the mean
-for (variable in variable_names) {
-  variable_mean <- mean(esko_lukutaito[[variable]])
-  print(variable_mean)
-}
-
 # Combine verbal assessment into one table -------------------------------------
 
 esko_se = esko_se %>%
   rename(IDHash = hetu_hash, IDCode = tunnus)
 
-## Merge by full join so that assessments with missing values are not lost
+## Merge the four datasets
 esko_se = right_join(esko_se, esko_kirjain, by = c("IDHash", "IDCode"))
 esko_se = right_join(esko_se, esko_fonol, by = c("IDHash", "IDCode")) 
 esko_se = right_join(esko_se, esko_lukutaito, by = c("IDHash", "IDCode")) 
 
+## create a separate dataframe for the correlation matrix
 esko_sums = esko_se[,c("Sum_AnsC_lt","Sum_AnsC_kt","Sum_AnsC_fon")]
 
+# Compute the descriptive statistics -------------------------------------------
+
+## Compute the correlation matrix between the three tests
 cor(esko_sums, method = "pearson")
 
-# Calculate quantiles
-quantiles_kt <- quantile(esko_se$Sum_AnsCS_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
-
-# Print the quantiles
-print(quantiles_kt)
-
-# Calculate quantiles
+## Calculate quantiles for the three tests
+quantiles_kt <- quantile(esko_se$Sum_AnsC_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
 quantiles_lt <- quantile(esko_se$Sum_AnsC_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
-
-# Print the quantiles
-print(quantiles_lt)
-
-# Calculate quantiles
 quantiles_fon <- quantile(esko_se$Sum_AnsC_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
 
-# Print the quantiles
+## Print the quantiles for the three tests
+print(quantiles_kt)
+print(quantiles_lt)
 print(quantiles_fon)
 
+## Print the mean and sd for the three tests
+print(mean(esko_se$Sum_AnsC_kt))
+print(mean(esko_se$Sum_AnsC_lt))
+print(mean(esko_se$Sum_AnsC_fon))
+print(sd(esko_se$Sum_AnsC_kt))
+print(sd(esko_se$Sum_AnsC_lt))
+print(sd(esko_se$Sum_AnsC_fon))
+
+
+## Compute the average score for each item in letter recognition
+variable_names <- paste0("Q", 1:3, "_AnsC_kt")
+
+## Loop through each variable and calculate the mean
+for (variable in variable_names) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+## Compute the average score for each item in letter recognition
+variable_names <- paste0("Q", 1:10, "_AnsC_lt")
+
+## Loop through each variable and calculate the mean
+for (variable in variable_names) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+## Compute the average score for each item in letter recognition
+variable_names <- paste0("Q", 1:10, "_AnsC_fon")
+
+## Loop through each variable and calculate the mean
+for (variable in variable_names) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+## Compute the Cronbach alpha's for letter recognition
 esko_kt = esko_se[,c("Q1_AnsC_kt","Q2_AnsC_kt","Q3_AnsC_kt")]
 alpha(esko_kt)
+
+## Compute the Cronbach alpha's for letter recognition
+esko_lt = esko_se[,c("Q1_AnsC_lt","Q2_AnsC_lt","Q3_AnsC_lt","Q4_AnsC_lt","Q5_AnsC_lt"
+                     ,"Q6_AnsC_lt","Q7_AnsC_lt","Q8_AnsC_lt","Q9_AnsC_lt","Q10_AnsC_lt")]
+alpha(esko_lt)
+
+## Compute the Cronbach alpha's for letter recognition
+esko_fon = esko_se[,c("Q1_AnsC_fon","Q2_AnsC_fon","Q3_AnsC_fon","Q4_AnsC_fon","Q5_AnsC_fon",
+                      "Q6_AnsC_fon","Q7_AnsC_fon","Q8_AnsC_fon","Q9_AnsC_fon","Q10_AnsC_fon")]
+alpha(esko_fon)
