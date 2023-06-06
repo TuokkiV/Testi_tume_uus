@@ -55,8 +55,7 @@ esko_fonol <- esko_fonol %>%
     Q7_AnsC_fon = ifelse(PreOrd == 7 & AnsC == 1, 1, 0),
     Q8_AnsC_fon = ifelse(PreOrd == 8 & AnsC == 1, 1, 0),
     Q9_AnsC_fon = ifelse(PreOrd == 9 & AnsC == 1, 1, 0),
-    Q10_AnsC_fon = ifelse(PreOrd == 10 & AnsC == 1, 1, 0),
-    Q11_AnsC_fon = ifelse(PreOrd == 11 & AnsC == 1, 1, 0)
+    Q10_AnsC_fon = ifelse(PreOrd == 10 & AnsC == 1, 1, 0)
   )
 
 esko_fonol <- esko_fonol %>%
@@ -70,8 +69,7 @@ esko_fonol <- esko_fonol %>%
   Q7_AnsC_fon = sum(Q7_AnsC_fon, na.rm = TRUE),
   Q8_AnsC_fon = sum(Q8_AnsC_fon, na.rm = TRUE),
   Q9_AnsC_fon = sum(Q9_AnsC_fon, na.rm = TRUE),
-  Q10_AnsC_fon = sum(Q10_AnsC_fon, na.rm = TRUE),
-  Q11_AnsC_fon = sum(Q11_AnsC_fon, na.rm = TRUE))
+  Q10_AnsC_fon = sum(Q10_AnsC_fon, na.rm = TRUE))
 
 esko_fonol  <- esko_fonol %>%
   mutate(Sum_AnsC_fon = sum(
@@ -84,8 +82,7 @@ esko_fonol  <- esko_fonol %>%
     Q7_AnsC_fon,
     Q8_AnsC_fon,
     Q9_AnsC_fon,
-    Q10_AnsC_fon,
-    Q11_AnsC_fon))
+    Q10_AnsC_fon))
          
 
 # Tidy 3rd sheet ("Kirjaintuntemus") -------------------------------------------
@@ -134,7 +131,6 @@ esko_lukutaito = esko_lukutaito %>%
     Q8_AnsC_lt = ifelse(SRFPreOrd == 8 & SRFAnsC == 1, 1, 0),
     Q9_AnsC_lt = ifelse(SRFPreOrd == 9 & SRFAnsC == 1, 1, 0),
     Q10_AnsC_lt = ifelse(SRFPreOrd == 10 & SRFAnsC == 1, 1, 0),
-    Q11_AnsC_lt = ifelse(SRFPreOrd == 11 & SRFAnsC == 1, 1, 0),
     Q1_att_lt = ifelse(SRFPreOrd == 1,1,0),
     Q2_att_lt = ifelse(SRFPreOrd == 2,1,0),
     Q3_att_lt = ifelse(SRFPreOrd == 3,1,0),
@@ -144,8 +140,7 @@ esko_lukutaito = esko_lukutaito %>%
     Q7_att_lt = ifelse(SRFPreOrd == 7,1,0),
     Q8_att_lt = ifelse(SRFPreOrd == 8,1,0),
     Q9_att_lt = ifelse(SRFPreOrd == 9,1,0),
-    Q10_att_lt = ifelse(SRFPreOrd == 10,1,0),
-    Q11_att_lt = ifelse(SRFPreOrd == 11,1,0)) %>%
+    Q10_att_lt = ifelse(SRFPreOrd == 10,1,0)) %>%
   summarise(
     Q1_AnsC_lt = max(Q1_AnsC_lt),
     Q2_AnsC_lt = max(Q2_AnsC_lt),
@@ -157,7 +152,6 @@ esko_lukutaito = esko_lukutaito %>%
     Q8_AnsC_lt = max(Q8_AnsC_lt),
     Q9_AnsC_lt = max(Q9_AnsC_lt),
     Q10_AnsC_lt = max(Q10_AnsC_lt),
-    Q11_AnsC_lt = max(Q11_AnsC_lt),
     Sum_AnsC_lt = sum(
       Q1_AnsC_lt,
       Q2_AnsC_lt,
@@ -168,8 +162,7 @@ esko_lukutaito = esko_lukutaito %>%
       Q7_AnsC_lt,
       Q8_AnsC_lt,
       Q9_AnsC_lt,
-      Q10_AnsC_lt,
-      Q11_AnsC_lt),
+      Q10_AnsC_lt),
     Q1_att_lt = max(Q1_att_lt),
     Q2_att_lt = max(Q2_att_lt),
     Q3_att_lt = max(Q3_att_lt),
@@ -180,7 +173,6 @@ esko_lukutaito = esko_lukutaito %>%
     Q8_att_lt = max(Q8_att_lt),
     Q9_att_lt = max(Q9_att_lt),
     Q10_att_lt = max(Q10_att_lt),
-    Q11_att_lt = max(Q11_att_lt),
     Sum_att_lt = sum(
       Q1_att_lt,
       Q2_att_lt,
@@ -191,8 +183,7 @@ esko_lukutaito = esko_lukutaito %>%
       Q7_att_lt,
       Q8_att_lt,
       Q9_att_lt,
-      Q10_att_lt,
-      Q11_att_lt))
+      Q10_att_lt))
 
 print(mean(esko_lukutaito$Sum_AnsC))
 print(sd(esko_lukutaito$Sum_AnsC))
