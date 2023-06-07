@@ -7,6 +7,7 @@ library(readxl)
 library(crayon)
 library(stringr)
 library(psych)
+library(ggplot2)
 
 crayon = function(x) cat(green(x), sep = "\n")
 options("tidylog.display" = list(crayon))
@@ -42,16 +43,16 @@ esko_fonol = read_xlsx("C:/Users/03248355/Work Folders/Data/eskodata_se.xlsx", 3
 esko_fonol <- esko_fonol %>%
   group_by(IDHash, IDCode) %>%
   mutate(
-    Q1_AnsC_fon = ifelse(PreOrd == 1 & AnsC == 1, 1, 0),
-    Q2_AnsC_fon = ifelse(PreOrd == 2 & AnsC == 1, 1, 0),
-    Q3_AnsC_fon = ifelse(PreOrd == 3 & AnsC == 1, 1, 0),
-    Q4_AnsC_fon = ifelse(PreOrd == 4 & AnsC == 1, 1, 0),
-    Q5_AnsC_fon = ifelse(PreOrd == 5 & AnsC == 1, 1, 0),
-    Q6_AnsC_fon = ifelse(PreOrd == 6 & AnsC == 1, 1, 0),
-    Q7_AnsC_fon = ifelse(PreOrd == 7 & AnsC == 1, 1, 0),
-    Q8_AnsC_fon = ifelse(PreOrd == 8 & AnsC == 1, 1, 0),
-    Q9_AnsC_fon = ifelse(PreOrd == 9 & AnsC == 1, 1, 0),
-    Q10_AnsC_fon = ifelse(PreOrd == 10 & AnsC == 1, 1, 0)
+    Q1_AnsC_fon = ifelse(PreOrd == 2 & AnsC == 1, 1, 0),
+    Q2_AnsC_fon = ifelse(PreOrd == 3 & AnsC == 1, 1, 0),
+    Q3_AnsC_fon = ifelse(PreOrd == 4 & AnsC == 1, 1, 0),
+    Q4_AnsC_fon = ifelse(PreOrd == 5 & AnsC == 1, 1, 0),
+    Q5_AnsC_fon = ifelse(PreOrd == 6 & AnsC == 1, 1, 0),
+    Q6_AnsC_fon = ifelse(PreOrd == 7 & AnsC == 1, 1, 0),
+    Q7_AnsC_fon = ifelse(PreOrd == 8 & AnsC == 1, 1, 0),
+    Q8_AnsC_fon = ifelse(PreOrd == 9 & AnsC == 1, 1, 0),
+    Q9_AnsC_fon = ifelse(PreOrd == 10 & AnsC == 1, 1, 0),
+    Q10_AnsC_fon = ifelse(PreOrd == 11 & AnsC == 1, 1, 0)
   )
 
 ## Group the data by ID
@@ -197,6 +198,15 @@ esko_se = right_join(esko_se, esko_kirjain, by = c("IDHash", "IDCode"))
 esko_se = right_join(esko_se, esko_fonol, by = c("IDHash", "IDCode")) 
 esko_se = right_join(esko_se, esko_lukutaito, by = c("IDHash", "IDCode")) 
 
+## Dataframes for histograms
+sum_kt = data.frame(Sum_AnsC_kt = esko_se$Sum_AnsC_kt)
+sum_lt = data.frame(Sum_AnsC_lt = esko_se$Sum_AnsC_lt)
+sum_fon = data.frame(Sum_AnsC_fon = esko_se$Sum_AnsC_fon)
+
+## Filter out test account
+esko_se = esko_se %>%
+  filter(IDCode != "admin@esko.fi") # Drop test account
+
 ## create a separate dataframe for the correlation matrix
 esko_sums = esko_se[,c("Sum_AnsC_lt","Sum_AnsC_kt","Sum_AnsC_fon")]
 
@@ -207,13 +217,31 @@ cor(esko_sums, method = "pearson")
 
 ## Calculate quantiles for the three tests
 quantiles_kt <- quantile(esko_se$Sum_AnsC_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
-quantiles_lt <- quantile(esko_se$Sum_AnsC_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
-quantiles_fon <- quantile(esko_se$Sum_AnsC_kt, c(0.05, 0.25, 0.5, 0.75, 0.95))
+quantiles_lt <- quantile(esko_se$Sum_AnsC_lt, c(0.05, 0.25, 0.5, 0.75, 0.95))
+quantiles_fon <- quantile(esko_se$Sum_AnsC_fon, c(0.05, 0.25, 0.5, 0.75, 0.95))
 
 ## Print the quantiles for the three tests
 print(quantiles_kt)
 print(quantiles_lt)
 print(quantiles_fon)
+
+## Histograms for the number of correctly answered questions
+p <- ggplot(sum_kt, aes(x=Sum_AnsC_kt))+geom_histogram(color="black", fill="grey")+
+  labs(x="Oikein vastattujen kysymysten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikein vastatut kysymykset: Kirjainten nimeäminen")
+p
+
+p <- ggplot(sum_lt, aes(x=Sum_AnsC_lt))+geom_histogram(binwidth = 1,color="black", fill="grey")+
+  labs(x="Oikein vastattujen kysymysten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikein vastatut kysymykset: Lukutaito")
+p
+
+p <- ggplot(sum_fon, aes(x=Sum_AnsC_fon))+geom_histogram(binwidth = 1,color="black", fill="grey")+
+  labs(x="Oikein vastattujen kysymysten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikein vastatut kysymykset: Alkuäänteen tunnistaminen")
+p
+
+
 
 ## Print the mean and sd for the three tests
 print(mean(esko_se$Sum_AnsC_kt))
