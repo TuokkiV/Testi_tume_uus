@@ -165,6 +165,28 @@ print(quantiles_kt)
 print(quantiles_lt)
 print(quantiles_fon)
 
+## Histograms for the number of correctly answered questions
+p <- ggplot(sum_kt, aes(x=Sum_AnsC_kt))+geom_histogram(color="black", fill="grey")+
+  labs(x="Oikeiden vastausten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikeiden vastausten lukumäärä: Kirjainten nimeäminen")+
+  theme(plot.title = element_text(size = 11, hjust = 0.5, vjust = 1))
+ggsave("16_22_kt.png", plot = p, width = 6, height = 4, dpi = 300)
+p
+
+p <- ggplot(sum_lt, aes(x=Sum_AnsC_lt))+geom_histogram(binwidth = 1,color="black", fill="grey")+
+  labs(x="Oikeiden vastausten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikeiden vastausten lukumäärä: Lukutaito")+
+  theme(plot.title = element_text(size = 12, hjust = 0.5, vjust = 1))
+ggsave("16_22_lt.png", plot = p, width = 6, height = 4, dpi = 300)
+p
+
+p <- ggplot(sum_fon, aes(x=Sum_AnsC_fon))+geom_histogram(binwidth = 1,color="black", fill="grey")+
+  labs(x="Oikeiden vastausten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikeiden vastausten lukumäärä: Alkuäänteen tunnistaminen")+
+  theme(plot.title = element_text(size = 10, hjust = 0.5, vjust = 1))
+ggsave("16_22_fon.png", plot = p, width = 6, height = 4, dpi = 300)
+p
+
 ## Print the mean and sd for the three tests
 print(mean(esko_se$Sum_AnsC_kt))
 print(mean(esko_se$Sum_AnsC_lt))

@@ -103,6 +103,18 @@ esko_kirjain <- esko_kirjain %>%
     Q2_AnsC_kt = ifelse(PreOrd == 2 & AnsCount > 0, AnsCount, 0),
     Q3_AnsC_kt = ifelse(PreOrd == 3 & AnsCount > 0, AnsCount, 0))
 
+# Create 29 new variables
+for (i in 1:3) {
+  PreOrd_val <- i
+  for (j in 0:9) {
+    Ans_val <- j
+    new_variable_name <- paste("LR", PreOrd_val, Ans_val, sep = "_")
+    esko_kirjain[[new_variable_name]] <- ifelse(grepl(Ans_val, esko_kirjain$Ans, fixed = TRUE) & PreOrd_val==esko_kirjain$PreOrd,1,0)
+  }
+}
+
+& PreOrd_val == esko_kirjain$PreOrd
+
 #Group the data by ID and add the total correct answers -variable
 esko_kirjain <- esko_kirjain %>%
   group_by(IDHash, IDCode) %>%
@@ -227,18 +239,23 @@ print(quantiles_fon)
 
 ## Histograms for the number of correctly answered questions
 p <- ggplot(sum_kt, aes(x=Sum_AnsC_kt))+geom_histogram(color="black", fill="grey")+
-  labs(x="Oikein vastattujen kysymysten lukumäärä", y="Havaintojen lukumäärä",
-       title="Oikein vastatut kysymykset: Kirjainten nimeäminen")
+  labs(x="Oikeiden vastausten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikeiden vastausten lukumäärä: Kirjainten nimeäminen")+
+  theme(plot.title = element_text(size = 12, hjust = 0.5, vjust = 1))
+ggsave("16_21_kt.png", plot = p, width = 6, height = 4, dpi = 300)
 p
 
 p <- ggplot(sum_lt, aes(x=Sum_AnsC_lt))+geom_histogram(binwidth = 1,color="black", fill="grey")+
-  labs(x="Oikein vastattujen kysymysten lukumäärä", y="Havaintojen lukumäärä",
-       title="Oikein vastatut kysymykset: Lukutaito")
+  labs(x="Oikeiden vastausten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikeiden vastausten lukumäärä: Lukutaito")
+ggsave("16_21_lt.png", plot = p, width = 6, height = 4, dpi = 300)
 p
 
 p <- ggplot(sum_fon, aes(x=Sum_AnsC_fon))+geom_histogram(binwidth = 1,color="black", fill="grey")+
-  labs(x="Oikein vastattujen kysymysten lukumäärä", y="Havaintojen lukumäärä",
-       title="Oikein vastatut kysymykset: Alkuäänteen tunnistaminen")
+  labs(x="Oikeiden vastausten lukumäärä", y="Havaintojen lukumäärä",
+       title="Oikeiden vastausten lukumäärä: Alkuäänteen tunnistaminen")+
+  theme(plot.title = element_text(size = 10, hjust = 0.5, vjust = 1))
+ggsave("16_21_fon.png", plot = p, width = 6, height = 4, dpi = 300)
 p
 
 
