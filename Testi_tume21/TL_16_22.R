@@ -82,13 +82,24 @@ esko_kirjain <- esko_kirjain %>%
     Q2_AnsC_kt = ifelse(PreOrd == 2 & AnsCount > 0, AnsCount, 0),
     Q3_AnsC_kt = ifelse(PreOrd == 3 & AnsCount > 0, AnsCount, 0))
 
+# Create 29 new variables. One for each letter to be recognized
+for (i in 1:3) {
+  PreOrd_val <- i
+  for (j in 0:9) {
+    Ans_val <- j
+    new_variable_name <- paste("LR", PreOrd_val, Ans_val, sep = "_")
+    esko_kirjain[[new_variable_name]] <- ifelse(grepl(Ans_val, esko_kirjain$Ans, fixed = TRUE) & PreOrd_val==esko_kirjain$PreOrd,1,0)
+  }
+}
+
 ## Create a variable to indicate total correctly answered items and group by ID
 esko_kirjain <- esko_kirjain %>%
   group_by(IDHash, IDCode) %>%
   summarise(Sum_AnsC_kt = sum(Q1_AnsC_kt,Q2_AnsC_kt,Q3_AnsC_kt),
             Q1_AnsC_kt = max(Q1_AnsC_kt),
             Q2_AnsC_kt = max(Q2_AnsC_kt),
-            Q3_AnsC_kt = max(Q3_AnsC_kt))
+            Q3_AnsC_kt = max(Q3_AnsC_kt),
+            across(starts_with("LR_"),~max(.)))
 
 
 # Tidy 3rd sheet ("Lukutaito - Sanalistan lukeminen") --------------------------
@@ -209,6 +220,29 @@ variable_names <- paste0("Q", 1:4, "_AnsC_lt")
 
 ## Loop through each variable and calculate the mean
 for (variable in variable_names) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+## Compute the average score for each letter in letter recognition
+vn_1 <- paste0("LR_1_", 0:9)
+vn_2 <- paste0("LR_2_", 0:9)
+vn_3 <- paste0("LR_3_", 0:8)
+
+## Loop through each variable and calculate the mean
+for (variable in vn_1) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+## Loop through each variable and calculate the mean
+for (variable in vn_2) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+## Loop through each variable and calculate the mean
+for (variable in vn_3) {
   variable_mean <- mean(esko_se[[variable]])
   print(variable_mean)
 }

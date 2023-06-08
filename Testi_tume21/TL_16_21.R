@@ -103,7 +103,7 @@ esko_kirjain <- esko_kirjain %>%
     Q2_AnsC_kt = ifelse(PreOrd == 2 & AnsCount > 0, AnsCount, 0),
     Q3_AnsC_kt = ifelse(PreOrd == 3 & AnsCount > 0, AnsCount, 0))
 
-# Create 29 new variables
+# Create 29 new variables. One for each letter to be recognized
 for (i in 1:3) {
   PreOrd_val <- i
   for (j in 0:9) {
@@ -113,15 +113,16 @@ for (i in 1:3) {
   }
 }
 
-& PreOrd_val == esko_kirjain$PreOrd
-
-#Group the data by ID and add the total correct answers -variable
+## Group the data by ID and add the total correct answers -variable for each 
+## exercise and each letter to be recognized
 esko_kirjain <- esko_kirjain %>%
   group_by(IDHash, IDCode) %>%
   summarise(Sum_AnsC_kt = sum(Q1_AnsC_kt,Q2_AnsC_kt,Q3_AnsC_kt),
             Q1_AnsC_kt = max(Q1_AnsC_kt),
             Q2_AnsC_kt = max(Q2_AnsC_kt),
-            Q3_AnsC_kt = max(Q3_AnsC_kt))
+            Q3_AnsC_kt = max(Q3_AnsC_kt),
+            across(starts_with("LR_"),~max(.)))
+
 
 
 # Tidy 4th sheet ("Lukutaito - Sanalistan lukeminen") --------------------------
@@ -278,6 +279,30 @@ for (variable in variable_names) {
   print(variable_mean)
 }
 
+## Compute the average score for each letter in letter recognition
+vn_1 <- paste0("LR_1_", 0:9)
+vn_2 <- paste0("LR_2_", 0:9)
+vn_3 <- paste0("LR_3_", 0:8)
+
+## Loop through each variable and calculate the mean
+for (variable in vn_1) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+## Loop through each variable and calculate the mean
+for (variable in vn_2) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+## Loop through each variable and calculate the mean
+for (variable in vn_3) {
+  variable_mean <- mean(esko_se[[variable]])
+  print(variable_mean)
+}
+
+
 ## Compute the average score for each item in letter recognition
 variable_names <- paste0("Q", 1:10, "_AnsC_lt")
 
@@ -290,11 +315,12 @@ for (variable in variable_names) {
 ## Compute the average score for each item in letter recognition
 variable_names <- paste0("Q", 1:10, "_AnsC_fon")
 
-## Loop through each variable and calculate the mean
+## Loop through each exercise-variable and calculate the mean
 for (variable in variable_names) {
   variable_mean <- mean(esko_se[[variable]])
   print(variable_mean)
 }
+
 
 ## Compute the Cronbach alpha's for letter recognition
 esko_kt = esko_se[,c("Q1_AnsC_kt","Q2_AnsC_kt","Q3_AnsC_kt")]
